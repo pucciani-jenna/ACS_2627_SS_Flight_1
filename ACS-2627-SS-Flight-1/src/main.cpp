@@ -1,18 +1,31 @@
 #include <Arduino.h>
 
-// put function declarations here:
-int myFunction(int, int);
+#include "data_logger.h"
+
+namespace {
+bool loggerReady = false;
+bool statusPrinted = false;
+}
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+    Serial.begin(115200);
+    loggerReady = DataLoggerBegin();
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-}
+    if (Serial && !statusPrinted) {
+        if (loggerReady) {
+            Serial.print("SD log opened: ");
+            Serial.println(DataLoggerFilename());
+        } else {
+            Serial.println("SD logger unavailable");
+        }
+        statusPrinted = true;
+    }
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+    // Poll sensors here and submit each fresh frame with DataLoggerLogTelemetry().
+    if (loggerReady && !DataLoggerService()) {
+        loggerReady = false;
+        statusPrinted = false;
+    }
 }

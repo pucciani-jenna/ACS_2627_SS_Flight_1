@@ -55,8 +55,9 @@ DataLoggerDiagnostics DataLoggerGetDiagnostics();
 bool DataLoggerBegin();
 const char* DataLoggerFilename();
 
-// Call only for a fresh, successful read. Use IDs "A1" through "A3"
-// for barometers and "I1" through "I3" for IMUs.
+// The following are called after the read is cussessful. A1 through A3 are passed as barometers, A1 is top barometer and A3 is bottom
+
+// IMU is passed in as I1 through I3, I1 is top IMU and I3 is bottom IMU. The channel is passed in as LowG, HighG, or Gyro. The x, y, z values are in m/s^2 for LowG and HighG, and rad/s for Gyro.
 bool DataLoggerLogPressure(uint32_t tMs, const char* sensor,
                     float pressurePa, float temperatureC);
 bool DataLoggerLogImu(uint32_t tMs, const char* sensor, ImuChannel channel,
