@@ -1,3 +1,4 @@
+// NOTE: IDK IF DATA LOGGER WORKS, BUT I PUT IT IN THE ORDER THAT BAT HAD IT (- Margaret)
 // Default Includes
 #include <Arduino.h>
 
@@ -24,6 +25,13 @@ void setup() {
   Serial.begin(115200);
   while (!Serial && millis() < 4000);
 
+  pinMode(LSM_CS_1, OUTPUT); digitalWrite(LSM_CS_1, HIGH);
+  pinMode(LSM_CS_2, OUTPUT); digitalWrite(LSM_CS_2, HIGH);
+  pinMode(LSM_CS_3, OUTPUT); digitalWrite(LSM_CS_3, HIGH);
+  pinMode(BMP_CS_1, OUTPUT); digitalWrite(BMP_CS_1, HIGH);
+  pinMode(BMP_CS_2, OUTPUT); digitalWrite(BMP_CS_2, HIGH);
+  pinMode(BMP_CS_3, OUTPUT); digitalWrite(BMP_CS_3, HIGH);
+  
   SPI.begin();
   SPI1.setMOSI(26); 
   SPI1.setMISO(39); 

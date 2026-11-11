@@ -11,15 +11,13 @@ int32_t platform_writeLSM(void *handle, uint8_t reg, const uint8_t *buf, uint16_
 
   dev->bus->transfer(reg & 0x7F);
   for (uint16_t i = 0; i < len; i++) {
-    dev->bus->transfe
-    r(buf[i]);
+    dev->bus->transfer(buf[i]);
   }
 
   digitalWrite(dev->cs_pin, HIGH);
   dev->bus->endTransaction();
   return 0;
 }
-
 
 int32_t platform_readLSM(void *handle, uint8_t reg, uint8_t *buf, uint16_t len) {
   SpiDeviceHandle *dev = (SpiDeviceHandle *)handle;
@@ -58,6 +56,13 @@ void init_imu(stmdev_ctx_t *ctx, SpiDeviceHandle *handle, SPIClass *bus, uint8_t
   ctx->read_reg  = platform_readLSM;
   ctx->mdelay    = platform_delayLSM;
   ctx->handle    = handle;
+
+  // DUMMY ADDRESS SWITCH I2C TO SPI
+  uint8_t dummy = 0;
+  platform_readLSM(handle, 0x00, &dummy, 1);
+  delay(5);
+  lsm6dsv80x_sw_reset(ctx);
+  delay(50);
 
   uint8_t whoamI = 0;
   lsm6dsv80x_device_id_get(ctx, &whoamI);
