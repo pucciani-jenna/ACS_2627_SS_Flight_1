@@ -7,17 +7,8 @@
 #include "led.h"
 #include "lsm6dsv80.h"
 
-// Data Logging
-#include "../include/data_logger.h"
-
 // Library Includes
 #include <NonBlockingRtttl.h>
-
-
-namespace {
-bool loggerReady = false;
-bool statusPrinted = false;
-}
 
 
 void setup() {
@@ -30,8 +21,6 @@ void setup() {
   SPI1.setSCK(27);
   SPI1.begin();
 
-  loggerReady = DataLoggerBegin(); // DATA LOGGER
-
   setupLEDs();
   setupIMU();
   setupAltimeter();
@@ -41,13 +30,25 @@ void setup() {
 }
 
 void loop() {
-  //rtttl::play();
+  rtttl::play();
   toggleLEDs();
   useIMU();
   useAltimeter();
   delay(100);
+#include "data_logger.h"
 
-  if (Serial && !statusPrinted) {
+namespace {
+bool loggerReady = false;
+bool statusPrinted = false;
+}
+
+void setup() {
+    Serial.begin(115200);
+    loggerReady = DataLoggerBegin();
+}
+
+void loop() {
+    if (Serial && !statusPrinted) {
         if (loggerReady) {
             Serial.print("SD log opened: ");
             Serial.println(DataLoggerFilename());
@@ -62,4 +63,4 @@ void loop() {
         loggerReady = false;
         statusPrinted = false;
     }
-  }
+}
