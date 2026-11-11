@@ -11,7 +11,8 @@ int32_t platform_writeLSM(void *handle, uint8_t reg, const uint8_t *buf, uint16_
 
   dev->bus->transfer(reg & 0x7F);
   for (uint16_t i = 0; i < len; i++) {
-    dev->bus->transfer(buf[i]);
+    dev->bus->transfe
+    r(buf[i]);
   }
 
   digitalWrite(dev->cs_pin, HIGH);
@@ -113,7 +114,7 @@ void read_imu(stmdev_ctx_t *ctx, const char *label) {
 
   float temp_c = lsm6dsv80x_from_lsb_to_celsius(temp_raw);
 
-  Serial.printf("[%s] Temp: %5.1f C | Accel: [%6.2f, %6.2f, %6.2f] | Gyro: [%6.3f, %6.3f, %6.3f]\n",
+  Serial.printf("[%s] Temp: %5.1f C | Accel m/s^2: [%6.2f, %6.2f, %6.2f] | Gyro rad/s: [%6.3f, %6.3f, %6.3f]\n",
                 label, temp_c, ax, ay, az, gx, gy, gz);
 }
 
