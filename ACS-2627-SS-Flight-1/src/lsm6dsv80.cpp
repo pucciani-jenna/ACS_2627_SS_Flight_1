@@ -1,5 +1,6 @@
 // This is code for the LSM6DSV80X IMU on the Teensy 4.1
 #include "lsm6dsv80.h"
+#include "data_logger.h"
 
 static SPISettings spiSettings(4000000, MSBFIRST, SPI_MODE3);
 
@@ -99,14 +100,15 @@ void setupIMU() {
 }
 
 // I might want to fix the order of this later!
-void read_imu(stmdev_ctx_t *ctx, const char *label) {
+// Bat: 11/13/2026 - Each of the 3 IMU sensors has a numbered ID (I1, I2, I3) for logging purposes.
+void read_imu(stmdev_ctx_t *ctx, const char *label, const char *sensorId) {
   int16_t accel[3] = {0};
   int16_t gyro[3] = {0};
   int16_t temp_raw = 0;
 
   // Read registers
-  lsm6dsv80x_acceleration_raw_get(ctx, accel);
-  lsm6dsv80x_angular_rate_raw_get(ctx, gyro);
+  const auto accelResult = lsm6dsv80x_acceleration_raw_get(ctx, accel);
+  const auto gyroResult = lsm6dsv80x_angular_rate_raw_get(ctx, gyro);
   lsm6dsv80x_temperature_raw_get(ctx, &temp_raw);
 
   float ax = (lsm6dsv80x_from_fs2_to_mg(accel[0]) / 1000.0f) * 9.80665f;
@@ -117,6 +119,19 @@ void read_imu(stmdev_ctx_t *ctx, const char *label) {
   float gy = (lsm6dsv80x_from_fs250_to_mdps(gyro[1]) / 1000.0f) * 0.0174533f;
   float gz = (lsm6dsv80x_from_fs250_to_mdps(gyro[2]) / 1000.0f) * 0.0174533f;
 
+  // Bat: 11/13/2026 - Logging the IMU data, chekcing whether DataLoggerIsInitialized() and then attempting to log the data.
+  if (DataLoggerIsInitialized()) { 
+    const uint32_t tMs = millis();
+    if (accelResult == 0 && 
+      !DataLoggerLogImu(tMs, sensorId, ImuChannel::LowG, ax, ay, az)) { 
+      Serial.printf("[%s] Could not queue accelerometer row \n", label);
+    }
+    if (gyroResult == 0 &&
+      !DataLoggerLogImu(tMs, sensorId, ImuChannel::Gyro, gx, gy, gz)) {
+      Serial.printf("[%s] Could not queue gyro row\n", label);
+    }
+      
+  }
   float temp_c = lsm6dsv80x_from_lsb_to_celsius(temp_raw);
 
   Serial.printf("[%s] Temp: %5.1f C | Accel m/s^2: [%6.2f, %6.2f, %6.2f] | Gyro rad/s: [%6.3f, %6.3f, %6.3f]\n",
@@ -124,9 +139,9 @@ void read_imu(stmdev_ctx_t *ctx, const char *label) {
 }
 
 void useIMU() {
-  read_imu(&dev_ctx1, "IMU1");
-  read_imu(&dev_ctx2, "IMU2");
-  read_imu(&dev_ctx3, "IMU3");
+  read_imu(&dev_ctx1, "IMU1", "I1");
+  read_imu(&dev_ctx2, "IMU2", "I2");
+  read_imu(&dev_ctx3, "IMU3", "I3");
   Serial.println();
 
   delay(200); // Another big massive delay

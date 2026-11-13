@@ -1,5 +1,5 @@
 #include "bmp581.h"
-
+#include "data_logger.h"
 const float SEA_LEVEL_PRESSURE_PA = 101325.0f;
 
 SPISettings bmpSpiSettings(1000000, MSBFIRST, SPI_MODE0);
@@ -107,10 +107,19 @@ bool init_bmp(struct bmp5_dev *dev, struct bmp5_osr_odr_press_config *osr_cfg,
   return (rslt == BMP5_OK);
 }
 
-void read_bmp(struct bmp5_dev *dev, struct bmp5_osr_odr_press_config *osr_cfg, const char *label) {
+void read_bmp(
+  struct bmp5_dev *dev, 
+  struct bmp5_osr_odr_press_config *osr_cfg, 
+  const char *label, 
+  const char *sensorId) {
   struct bmp5_sensor_data data = {0};
 
-  if (bmp5_get_sensor_data(&data, osr_cfg, dev) == BMP5_OK) {
+  if (bmp5_get_sensor_data(&data, osr_cfg, dev ) == BMP5_OK) {
+    // Bat: 11/13/2026 - This checks whether the data logger is initialized and attempts to log pressure data.
+    if (DataLoggerIsInitialized() && !DataLoggerLogPressure(millis(), sensorId, data.pressure, data.temperature)) {
+      Serial.printf("[%s] Could not queue SD log row\n", label);
+    }
+
     float altM = calculateAltitudeMeters(data.pressure);
     float altFt = altM * 3.28084f;
 
@@ -135,9 +144,10 @@ void setupAltimeter() {
   Serial.println("BMP581 setup finished.\n");
 }
 
+// Bat: 11/13/2026 - Each of the 3 BMP581 sensors has a numbered ID (A1, A2, A3) for logging purposes. 
 void useAltimeter() {
-  read_bmp(&dev_ctx1, &osr_cfg1, "BMP 1");
-  read_bmp(&dev_ctx2, &osr_cfg2, "BMP 2");
-  read_bmp(&dev_ctx3, &osr_cfg3, "BMP 3");
+  read_bmp(&dev_ctx1, &osr_cfg1, "BMP 1", "A1");
+  read_bmp(&dev_ctx2, &osr_cfg2, "BMP 2", "A2");
+  read_bmp(&dev_ctx3, &osr_cfg3, "BMP 3", "A3");
   Serial.println("------------------------------------------------------------------");
 }
